@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>{% if teoria %}Predicción académica: explicación{% else %}Predicción académica: práctica{% endif %}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+  h1 { margin-bottom: .2rem; }
+  nav button { padding: .6rem 1.2rem; border: 1px solid #335; background: #fff; cursor: pointer; font-size: 1rem; }
+  nav button.activo { background: #335; color: #fff; }
+  section { border: 1px solid #ccd; padding: 1rem 1.5rem; margin-top: 1rem; }
+  label { display: block; margin: .6rem 0 .2rem; }
+  input[type=number] { padding: .4rem; width: 180px; }
+  button.accion { margin-top: 1rem; padding: .6rem 1.2rem; background: #335; color: #fff; border: 0; cursor: pointer; }
+  .tarjetas { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }
+  .tarjeta { flex: 1; min-width: 280px; border: 1px solid #ccd; padding: 1rem; border-radius: 6px; }
+  .ok { color: #0a7a2f; } .mal { color: #b00020; }
+  .aviso { flex-basis: 100%; background: #fff4e0; border: 1px solid #e08a00; color: #7a4a00;
+           border-radius: 6px; padding: .7rem 1rem; font-weight: 600; }
+  table.matriz { border-collapse: collapse; margin-top: .5rem; }
+  table.matriz td, table.matriz th { border: 1px solid #999; padding: .4rem .8rem; text-align: center; }
+  .error { color: #b00020; margin-top: 1rem; }
+  fieldset { margin: .6rem 0; border: 1px solid #ccd; }
+  .actividad { margin: .3rem 0; }
+  .actividad input { width: 110px; padding: .3rem; }
+  .clases { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: .5rem; margin: .5rem 0; }
+  label.clase { margin: 0; cursor: pointer; }
+  .clase input { display: none; }
+  .clase span { display: block; padding: .5rem .3rem; text-align: center; border: 1px solid #b00020;
+                background: #fdecee; color: #b00020; border-radius: 6px; font-size: .9rem; user-select: none; }
+  .clase span::after { content: " ✗"; }
+  .clase input:checked + span { border-color: #0a7a2f; background: #e6f5ea; color: #0a7a2f; }
+  .clase input:checked + span::after { content: " ✓"; }
+  button.sec { padding: .4rem .9rem; border: 1px solid #335; background: #fff; cursor: pointer; }
+  html { scroll-behavior: smooth; }
+  header.hero { background: #335; color: #fff; padding: 2rem 1.5rem; border-radius: 8px; }
+  header.hero p { margin: .4rem 0 0; opacity: .9; }
+  nav.menu { position: sticky; top: 0; background: #fff; padding: .6rem 0; display: flex; gap: .5rem; flex-wrap: wrap;
+             border-bottom: 1px solid #ccd; z-index: 5; margin-top: 1rem; }
+  nav.menu a { padding: .4rem .9rem; border: 1px solid #335; border-radius: 20px; color: #335; text-decoration: none; font-size: .95rem; }
+  nav.menu a:hover { background: #335; color: #fff; }
+  section h2 { margin-top: 0; color: #335; }
+  .dos-col { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .dos-col > div { flex: 1; min-width: 280px; border: 1px solid #ccd; border-radius: 6px; padding: .5rem 1rem 1rem; background: #fafaff; }
+  table.comp { border-collapse: collapse; width: 100%; margin-top: .5rem; }
+  table.comp th, table.comp td { border: 1px solid #ccd; padding: .5rem .7rem; text-align: left; vertical-align: top; }
+  table.comp th { background: #eef; }
+  .flujo { display: flex; gap: .5rem; flex-wrap: wrap; align-items: stretch; margin: .8rem 0; }
+  .flujo div { flex: 1; min-width: 150px; background: #eef; border-radius: 6px; padding: .6rem; text-align: center; font-size: .92rem; }
+  code { background: #eef; padding: 0 .3rem; border-radius: 3px; }
+  .nota-honesta { background: #fff4e0; border-left: 4px solid #e08a00; padding: .7rem 1rem; border-radius: 4px; }
+  footer { text-align: center; color: #666; font-size: .85rem; margin: 2rem 0; }
+  a.boton { display: inline-block; margin-top: 1rem; padding: .6rem 1.2rem; background: #fff; color: #335;
+            border-radius: 6px; text-decoration: none; font-weight: 600; }
+  a.boton:hover { background: #dde; }
+  nav.menu a.destacado { background: #335; color: #fff; margin-left: auto; }
+  section.cta { text-align: center; background: #eef; }
+  section.cta a.boton { background: #335; color: #fff; }
+  section.cta a.boton:hover { background: #224; }
+</style>
+</head>
+<body>
+<header class="hero">
+  {% if teoria %}
+  <h1>Predicción del rendimiento académico</h1>
+  <p>Regresión Logística vs. Red Neuronal Artificial: qué son, cómo funcionan y cómo se usarían en un sistema académico.</p>
+  <a class="boton" href="/practica">Ir a la práctica →</a>
+  {% else %}
+  <h1>Práctica: predice si un estudiante aprueba</h1>
+  <p>Ingresa asistencia y actividades y compara la respuesta de la Regresión Logística y la Red Neuronal.</p>
+  <a class="boton" href="/">← Volver a la explicación</a>
+  {% endif %}
+</header>
+
+{% if teoria %}
+<nav class="menu">
+  <a href="#que-es">¿Qué es la predicción?</a>
+  <a href="#regresion">Regresión Logística</a>
+  <a href="#red">Red Neuronal</a>
+  <a href="#comparacion">Comparación</a>
+  <a href="#sistema">En un sistema académico</a>
+  <a href="/practica" class="destacado">Ir a la práctica →</a>
+</nav>
+{% endif %}
+
+{% if teoria %}
+<section id="que-es">
+  <h2>¿Qué es la predicción basada en datos?</h2>
+  <p>Es una técnica de <b>aprendizaje automático supervisado</b>: se le muestran al modelo muchos casos de estudiantes
+     anteriores (su asistencia, sus notas, sus entregas) junto con el resultado real (aprobó o no aprobó). El modelo aprende
+     el patrón y luego, ante un estudiante nuevo, estima la <b>probabilidad de que apruebe</b>.</p>
+  <p>Es un problema de <b>clasificación binaria</b>: la respuesta final es una de dos clases, <span class="ok"><b>Aprueba</b></span>
+     o <span class="mal"><b>Reprueba</b></span>. Si la probabilidad es de 50% o más, se predice "Aprueba".</p>
+  <div class="flujo">
+    <div><b>1. Datos</b><br>Asistencia, tareas entregadas y promedio</div>
+    <div><b>2. Entrenamiento</b><br>El modelo aprende de casos pasados</div>
+    <div><b>3. Predicción</b><br>Probabilidad de aprobar de un estudiante nuevo</div>
+    <div><b>4. Decisión</b><br>El docente actúa a tiempo</div>
+  </div>
+  <p>En esta página las variables de entrada son: las <b>{{ horas_estudio }} horas de estudio</b> del curso
+     ({{ total_clases }} clases de {{ horas_por_clase }} horas), el <b>porcentaje de asistencia</b>, las <b>tareas entregadas</b>
+     (de {{ total_actividades }} actividades evaluativas) y el <b>promedio</b> de esas actividades. Los datos con los que se
+     entrenan los modelos son <b>sintéticos</b> (simulados) y siguen las reglas del curso, por lo que sirven para entender el
+     método y no como resultados reales.</p>
+</section>
+
+<section id="regresion">
+  <h2>Regresión Logística</h2>
+  <p>Es un modelo estadístico clásico que combina las variables de entrada con una suma ponderada y pasa el resultado por
+     la <b>función sigmoide</b>, que lo convierte en una probabilidad entre 0 y 1.</p>
+  <p style="text-align:center"><code>P(aprueba) = 1 / (1 + e<sup>−(b₀ + b₁·asistencia + b₂·tareas + b₃·promedio)</sup>)</code></p>
+  <ul>
+    <li><b>Qué hace:</b> asigna a cada variable un peso (coeficiente) y calcula la probabilidad de aprobar.</li>
+    <li><b>Fortaleza:</b> es simple, rápida y <b>explicable</b>: se puede decir cuánto influye cada variable en el resultado.</li>
+    <li><b>Limitación:</b> por sí sola traza una frontera recta entre quienes aprueban y quienes no. Para reglas con varios
+        umbrales a la vez (por ejemplo, asistencia mínima <i>y</i> promedio mínimo) en esta página se le agregan términos
+        polinómicos de grado 3.</li>
+  </ul>
+</section>
+
+<section id="red">
+  <h2>Red Neuronal Artificial</h2>
+  <p>Es un modelo inspirado en el cerebro: está formado por <b>capas de neuronas</b> conectadas entre sí. Cada neurona
+     combina sus entradas, aplica una función de activación y envía el resultado a la siguiente capa.</p>
+  <div class="flujo">
+    <div><b>Capa de entrada</b><br>asistencia, tareas, promedio</div>
+    <div><b>Capa oculta 1</b><br>64 neuronas</div>
+    <div><b>Capa oculta 2</b><br>32 neuronas</div>
+    <div><b>Salida</b><br>probabilidad de aprobar</div>
+  </div>
+  <ul>
+    <li><b>Qué hace:</b> ajusta miles de pesos internos durante el entrenamiento hasta que sus predicciones coinciden con los
+        resultados reales.</li>
+    <li><b>Fortaleza:</b> aprende relaciones <b>no lineales</b> y combinaciones complejas de variables sin que nadie las programe.</li>
+    <li><b>Limitación:</b> funciona como una "caja negra": es difícil explicar por qué dio ese resultado, y necesita más datos
+        para no sobreajustarse.</li>
+  </ul>
+</section>
+
+<section id="comparacion">
+  <h2>Comparación</h2>
+  <table class="comp">
+    <tr><th></th><th>Regresión Logística</th><th>Red Neuronal Artificial</th></tr>
+    <tr><th>Idea central</th><td>Suma ponderada + sigmoide</td><td>Capas de neuronas con activaciones</td></tr>
+    <tr><th>Relaciones que captura</th><td>Lineales (o las que se le programen)</td><td>No lineales, de forma automática</td></tr>
+    <tr><th>Explicabilidad</th><td>Alta: cada coeficiente tiene significado</td><td>Baja: es una caja negra</td></tr>
+    <tr><th>Datos necesarios</th><td>Pocos</td><td>Más</td></tr>
+    <tr><th>Costo de entrenamiento</th><td>Bajo</td><td>Mayor</td></tr>
+    <tr><th>Mejor cuando…</th><td>Se necesita justificar la decisión</td><td>Los patrones son complejos</td></tr>
+  </table>
+  <p>Ambos modelos entregan la misma salida (una probabilidad), por eso en la sección de prueba se muestran lado a lado:
+     si coinciden, la predicción es más confiable; si no coinciden, conviene revisar el caso con un docente.</p>
+
+  <h3>¿Qué tan bien predicen?</h3>
+  <p>Cada modelo se entrenó con el 75% de {{ n_total }} estudiantes simulados y se evaluó con el 25% restante
+     ({{ n_prueba }} estudiantes que nunca había visto). Exactitud = porcentaje de predicciones correctas:</p>
+  <div class="tarjetas">
+    {% for nombre, valor in exactitud.items() %}
+    <div class="tarjeta"><h3>{{ nombre }}</h3><p style="font-size:1.6rem;margin:.2rem 0"><b>{{ valor }}%</b></p></div>
+    {% endfor %}
+  </div>
+  <p class="nota-honesta"><b>Ojo con estos números:</b> son tan altos porque los datos son sintéticos y siguen una regla exacta
+     (asistencia ≥ {{ asistencia_min|int }}% y promedio ≥ {{ promedio_min }}). Con estudiantes reales habría más ruido
+     (enfermedades, notas atípicas, factores no medidos) y la exactitud sería menor. Además, aun con una exactitud alta los
+     modelos fallan cerca de los límites de la regla, por ejemplo con promedios muy cercanos a {{ promedio_min }}, y ahí es
+     donde necesitan la revisión de una persona.</p>
+</section>
+
+<section id="sistema">
+  <h2>¿Cómo funcionaría en un sistema académico?</h2>
+  <div class="dos-col">
+    <div>
+      <h3>Flujo de uso</h3>
+      <ol>
+        <li>El sistema recoge durante el curso la asistencia, las entregas y las notas de cada estudiante.</li>
+        <li>Con los datos históricos de cursos anteriores se entrena el modelo.</li>
+        <li>A medida que avanza el semestre, se calcula la probabilidad de aprobar de cada estudiante activo.</li>
+        <li>Los estudiantes con baja probabilidad generan una <b>alerta temprana</b> para el docente o el tutor.</li>
+        <li>Se aplican apoyos: tutorías, recordatorios y seguimiento. Luego se reentrena el modelo con los nuevos resultados.</li>
+      </ol>
+    </div>
+    <div>
+      <h3>Reglas del curso de ejemplo</h3>
+      <ul>
+        <li>Se aprueba con asistencia de <b>{{ asistencia_min|int }}%</b> o más y promedio de <b>{{ promedio_min }}</b> o más.</li>
+        <li>Una actividad no entregada cuenta con nota <b>0.0</b>.</li>
+        <li>Con asistencia mayor a <b>{{ asistencia_premio|int }}%</b> se suman <b>{{ puntos_premio }}</b> puntos al promedio (máximo 5.0).</li>
+        <li>El promedio se calcula con {{ total_actividades }} actividades evaluativas.</li>
+      </ul>
+    </div>
+  </div>
+  <h3>Beneficios y cuidados</h3>
+  <ul>
+    <li><b>Beneficios:</b> detecta el riesgo de reprobar antes de que sea tarde, ayuda a priorizar el apoyo y permite
+        seguimiento continuo.</li>
+    <li><b>Cuidados:</b> la predicción es una <b>probabilidad</b>, no una sentencia; debe apoyar al docente y no reemplazarlo,
+        revisarse para evitar sesgos y usarse con datos protegidos y con consentimiento.</li>
+  </ul>
+</section>
+
+<section class="cta">
+  <h2>¿Listo para probarlo?</h2>
+  <p>Ingresa la asistencia y las actividades de un estudiante y mira cómo predice cada modelo.</p>
+  <a class="boton" href="/practica">Ir a la práctica →</a>
+</section>
+{% endif %}
+
+{% if not teoria %}
+<section id="ind">
+  <h2>Predicción para un estudiante</h2>
+  <p>Marca la asistencia y las actividades entregadas, y compara cómo responde cada modelo.</p>
+  <form id="form-ind">
+    <p>Horas de estudio: <b>{{ horas_estudio }}</b> ({{ total_clases }} clases de {{ horas_por_clase }} horas).</p>
+    <h3>Asistencia a clases ({{ total_clases }} clases)</h3>
+    <div class="clases">
+      {% for c in range(total_clases) %}
+      <label class="clase"><input type="checkbox" class="asistio"><span>Clase {{ c + 1 }}</span></label>
+      {% endfor %}
+    </div>
+    <p>
+      <button type="button" class="sec" id="marcar-todas">Marcar todas</button>
+      <button type="button" class="sec" id="limpiar">Limpiar</button>
+      <button type="button" class="sec" id="caso-conflictivo" title="14 clases, notas 4 y 3.5, tercera sin entregar">Cargar caso conflictivo</button>
+    </p>
+    <p>Clases asistidas: <b id="clases-calc">0</b> de {{ total_clases }} ·
+       Asistencia: <b id="asistencia-calc">0.0</b>%
+       <span id="premio-calc" class="ok"></span></p>
+
+    <h3>Actividades evaluativas ({{ total_actividades }})</h3>
+    {% for a in range(total_actividades) %}
+    <div class="actividad">
+      Actividad evaluativa {{ a + 1 }}:
+      <select class="entrega">
+        <option value="0">No entregó</option>
+        <option value="1">Entregó</option>
+      </select>
+      <input type="number" class="nota" step="0.01" min="{{ nota_min }}" max="{{ nota_max }}" value="0.0"
+             placeholder="Nota {{ nota_min|int }}–{{ nota_max|int }}" disabled>
+    </div>
+    {% endfor %}
+    <p>Tareas entregadas: <b id="tareas-calc">0</b> de {{ total_actividades }} ·
+       Promedio final: <b id="promedio-calc">–</b></p>
+    <button class="accion" type="submit">Predecir</button>
+  </form>
+  <div id="res-ind" class="tarjetas"></div>
+  <div id="grafico"></div>
+</section>
+<section id="lote">
+  <h2>Predicción por lotes y evaluación</h2>
+  <p>Sube un CSV con las columnas <code>asistencia</code> (0–100), <code>tareas_entregadas</code> (0–{{ total_actividades }}),
+     <code>promedio_previo</code> (0–5) y <code>aprobado</code> (0 = reprueba, 1 = aprueba). La columna <code>aprobado</code>
+     contiene el resultado real y es necesaria para calcular las métricas y la matriz de confusión.</p>
+  <p><a href="/descargar-ejemplo.csv">Descargar CSV de ejemplo</a> (datos de prueba sintéticos con resultados reales).</p>
+  <form id="form-lote" enctype="multipart/form-data">
+    <label for="archivo-lote">Archivo CSV</label>
+    <input id="archivo-lote" name="archivo" type="file" accept=".csv,text/csv" required>
+    <button class="accion" type="submit">Evaluar lote</button>
+  </form>
+  <div id="error-lote" class="error"></div>
+  <div id="resultados-lote"></div>
+</section>
+<div id="error" class="error"></div>
+{% endif %}
+<footer>Proyecto final de Analítica de datos · Datos sintéticos con fines educativos</footer>
+
+{% if not teoria %}
+<script>
+const err = m => document.getElementById('error').textContent = m || '';
+const errLote = m => document.getElementById('error-lote').textContent = m || '';
+
+const TOTAL_CLASES = {{ total_clases }};
+const PROMEDIO_MIN = {{ promedio_min }};
+const ASISTENCIA_PREMIO = {{ asistencia_premio }};
+const PUNTOS_PREMIO = {{ puntos_premio }};
+const actividades = [...document.querySelectorAll('.actividad')].map(d => ({
+  sel: d.querySelector('.entrega'), nota: d.querySelector('.nota')}));
+
+const asistencias = [...document.querySelectorAll('.asistio')];
+const clasesAsistidas = () => asistencias.filter(c => c.checked).length;
+
+function recalcular() {
+  const c = clasesAsistidas();
+  document.getElementById('clases-calc').textContent = c;
+  const asist = c / TOTAL_CLASES * 100;
+  document.getElementById('asistencia-calc').textContent = asist.toFixed(1);
+  const premio = asist > ASISTENCIA_PREMIO;
+  document.getElementById('premio-calc').textContent =
+    premio ? `· Premio de asistencia: +${PUNTOS_PREMIO} al promedio` : '';
+  const notas = actividades.map(a => a.sel.value === '1' ? (parseFloat(a.nota.value) || 0) : 0);
+  document.getElementById('tareas-calc').textContent = actividades.filter(a => a.sel.value === '1').length;
+  const base = notas.reduce((s, n) => s + n, 0) / notas.length;
+  document.getElementById('promedio-calc').textContent =
+    Math.min(5, base + (premio ? PUNTOS_PREMIO : 0)).toFixed(2);
+  guardar();
+}
+for (const c of asistencias) c.onchange = recalcular;
+const marcar = v => { asistencias.forEach(c => c.checked = v); recalcular(); };
+document.getElementById('marcar-todas').onclick = () => marcar(true);
+document.getElementById('limpiar').onclick = () => marcar(false);
+document.getElementById('caso-conflictivo').onclick = () => {
+  asistencias.forEach((c, i) => c.checked = i < 14);
+  [['1', '4'], ['1', '3.5'], ['0', '0.0']].forEach(([entrego, nota], i) => {
+    const a = actividades[i];
+    a.sel.value = entrego;
+    a.nota.disabled = entrego !== '1';
+    a.nota.required = !a.nota.disabled;
+    a.nota.value = nota;
+  });
+  recalcular();
+  document.querySelector('button.accion').click();
+};
+for (const a of actividades) {
+  a.sel.onchange = () => {
+    a.nota.disabled = a.sel.value !== '1';
+    a.nota.required = !a.nota.disabled;
+    a.nota.value = a.nota.disabled ? '0.0' : '';
+    recalcular();
+  };
+  a.nota.oninput = () => {
+    const v = parseFloat(a.nota.value);
+    if (v > 5) a.nota.value = 5;
+    if (v < 0) a.nota.value = 0;
+    recalcular();
+  };
+}
+
+const historial = [];
+const COLORES = {Aprueba: '#0a7a2f', Reprueba: '#b00020', Mixto: '#e08a00'};
+
+function agregarLinea(datos, entradas, modelos) {
+  const veredictos = Object.values(modelos).map(m => m.prediccion);
+  const resultado = veredictos.every(v => v === veredictos[0]) ? veredictos[0] : 'Mixto';
+  historial.push({
+    n: historial.length + 1,
+    notas: datos.actividades.map(a => a.entregada ? parseFloat(a.nota) || 0 : 0),
+    entradas, resultado,
+    detalle: Object.entries(modelos).map(([n, m]) => `${n.split(' ')[0]}: ${m.prediccion}`).join(' · ')
+  });
+  dibujarGrafico();
+}
+
+function dibujarGrafico() {
+  const W = 640, H = 320, L = 50, R = 20, T = 20, B = 40;
+  const n = actividades.length;
+  const x = i => L + (n === 1 ? 0 : i * (W - L - R) / (n - 1));
+  const y = v => T + (5 - v) * (H - T - B) / 5;
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px">`;
+  for (let v = 0; v <= 5; v++)
+    s += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#e3e3ec"/>` +
+         `<text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" font-size="12">${v}</text>`;
+  for (let i = 0; i < n; i++)
+    s += `<text x="${x(i)}" y="${H - 15}" text-anchor="middle" font-size="12">Actividad ${i + 1}</text>`;
+  s += `<line x1="${L}" x2="${W - R}" y1="${y(PROMEDIO_MIN)}" y2="${y(PROMEDIO_MIN)}" stroke="#335" stroke-dasharray="6 4"/>` +
+       `<text x="${W - R}" y="${y(PROMEDIO_MIN) - 5}" text-anchor="end" font-size="11" fill="#335">Mínimo para aprobar (${PROMEDIO_MIN})</text>`;
+  for (const h of historial) {
+    const c = COLORES[h.resultado];
+    s += `<polyline fill="none" stroke="${c}" stroke-width="2.5" points="${h.notas.map((v, i) => `${x(i)},${y(v)}`).join(' ')}"/>`;
+    h.notas.forEach((v, i) => s += `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="${c}"><title>Predicción ${h.n} · Actividad ${i + 1}: ${v}</title></circle>`);
+  }
+  s += '</svg>';
+  const leyenda = historial.map(h =>
+    `<li style="color:${COLORES[h.resultado]}"><b>Predicción ${h.n}</b> · Asistencia ${h.entradas.asistencia}% · ` +
+    `Promedio ${h.entradas.promedio_previo}${h.entradas.premio_asistencia ? ` (incluye +${h.entradas.premio_asistencia} por asistencia)` : ''} · ${h.detalle}</li>`).join('');
+  document.getElementById('grafico').innerHTML =
+    `<h3>Rendimiento académico por predicción</h3>${s}<ul>${leyenda}</ul>` +
+    `<button type="button" class="sec" onclick="borrarGrafico()">Borrar gráfico</button>`;
+  if (!historial.length) document.getElementById('grafico').innerHTML = '';
+}
+
+function borrarGrafico() {
+  historial.length = 0;
+  ultimosResultados = null;
+  document.getElementById('res-ind').innerHTML = '';
+  dibujarGrafico();
+  guardar();
+}
+
+document.getElementById('form-ind').onsubmit = async e => {
+  e.preventDefault(); err();
+  const datos = {
+    clases_asistidas: clasesAsistidas(),
+    actividades: actividades.map(a => ({entregada: a.sel.value === '1', nota: a.nota.value}))
+  };
+  const r = await fetch('/api/individual', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(datos)});
+  const j = await r.json();
+  if (!r.ok) return err(j.error);
+  const {_entradas, ...modelos} = j;
+  mostrarResultados(modelos);
+  agregarLinea(datos, _entradas, modelos);
+  ultimosResultados = modelos;
+  guardar();
+};
+
+function mostrarResultados(modelos) {
+  const vals = Object.values(modelos);
+  const discrepan = new Set(vals.map(v => v.prediccion)).size > 1;
+  const cercaDelCorte = vals.some(v => v.probabilidad_aprobar >= 0.4 && v.probabilidad_aprobar <= 0.6);
+  let aviso = '';
+  if (discrepan) {
+    aviso = 'Caso dudoso: los modelos no coinciden (uno aprueba y el otro reprueba). Se recomienda la revisión de un docente.';
+  } else if (cercaDelCorte) {
+    aviso = 'Caso dudoso: la probabilidad está cerca del 50%. Se recomienda la revisión de un docente.';
+  }
+  document.getElementById('res-ind').innerHTML = Object.entries(modelos).map(([n, v]) =>
+    `<div class="tarjeta"><h3>${n}</h3>
+     <p class="${v.prediccion === 'Aprueba' ? 'ok' : 'mal'}"><b>${v.prediccion}</b></p>
+     <p>Probabilidad de aprobar: ${(v.probabilidad_aprobar * 100).toFixed(1)}%</p></div>`).join('') +
+    (aviso ? `<div class="aviso">⚠ ${aviso}</div>` : '');
+}
+
+document.getElementById('form-lote').onsubmit = async e => {
+  e.preventDefault();
+  errLote('');
+  const salida = document.getElementById('resultados-lote');
+  salida.innerHTML = '';
+  const archivo = document.getElementById('archivo-lote').files[0];
+  if (!archivo) return errLote('Selecciona un archivo CSV.');
+  const datos = new FormData();
+  datos.append('archivo', archivo);
+  try {
+    const respuesta = await fetch('/api/lote', {method: 'POST', body: datos});
+    const resultado = await respuesta.json();
+    if (!respuesta.ok) return errLote(resultado.error || 'No se pudo procesar el archivo.');
+    renderizarLote(resultado);
+  } catch (e) {
+    errLote('No se pudo procesar la solicitud. Verifica el archivo e inténtalo de nuevo.');
+  }
+};
+
+function renderizarLote(resultado) {
+  const nombres = Object.keys(resultado.metricas);
+  const tarjetas = nombres.map(nombre => {
+    const m = resultado.metricas[nombre];
+    return `<div class="tarjeta"><h3>${nombre}</h3>
+      <p>Exactitud: <b>${m.exactitud}%</b> · Precisión: <b>${m.precision}%</b></p>
+      <p>Sensibilidad: <b>${m.sensibilidad}%</b> · F1: <b>${m.f1}%</b></p>
+      <h4>Matriz de confusión</h4>
+      <table class="matriz"><thead><tr><th></th><th colspan="2">Predicción</th></tr>
+        <tr><th>Valor real</th><th>Reprueba</th><th>Aprueba</th></tr></thead><tbody>
+        <tr><th>Reprueba</th><td>${m.matriz[0][0]}</td><td>${m.matriz[0][1]}</td></tr>
+        <tr><th>Aprueba</th><td>${m.matriz[1][0]}</td><td>${m.matriz[1][1]}</td></tr>
+      </tbody></table></div>`;
+  }).join('');
+  const filas = resultado.filas.slice(0, 100).map((fila, i) =>
+    `<tr><td>${i + 1}</td><td>${fila.asistencia}%</td><td>${fila.tareas_entregadas}</td>
+     <td>${fila.promedio_previo}</td><td>${fila.real ? 'Aprueba' : 'Reprueba'}</td>
+     ${nombres.map(nombre => `<td>${fila.predicciones[nombre].aprobado ? 'Aprueba' : 'Reprueba'} (${(fila.predicciones[nombre].probabilidad * 100).toFixed(1)}%)</td>`).join('')}
+     </tr>`).join('');
+  document.getElementById('resultados-lote').innerHTML =
+    `<p>Evaluados: <b>${resultado.total}</b></p>
+     <div class="tarjetas">${tarjetas}</div>
+     <h3>Predicciones por estudiante</h3>
+     <p>Se muestran hasta 100 filas; descarga el resultado para ver el lote completo.</p>
+     <button type="button" class="sec" id="descargar-resultados">Descargar resultados CSV</button>
+     <div style="overflow-x:auto"><table class="matriz"><thead><tr><th>#</th><th>Asistencia</th><th>Tareas</th>
+     <th>Promedio</th><th>Resultado real</th>${nombres.map(n => `<th>${n}</th>`).join('')}</tr></thead>
+     <tbody>${filas}</tbody></table></div>`;
+  document.getElementById('descargar-resultados').onclick = () => descargarResultados(resultado, nombres);
+}
+
+function descargarResultados(resultado, nombres) {
+  const encabezados = ['asistencia', 'tareas_entregadas', 'promedio_previo', 'aprobado_real',
+    ...nombres.flatMap(nombre => [`${nombre}_prediccion`, `${nombre}_probabilidad`])];
+  const filas = resultado.filas.map(fila => [
+    fila.asistencia, fila.tareas_entregadas, fila.promedio_previo, fila.real,
+    ...nombres.flatMap(nombre => [
+      fila.predicciones[nombre].aprobado, fila.predicciones[nombre].probabilidad
+    ])
+  ]);
+  const csv = [encabezados, ...filas].map(fila => fila.join(',')).join('\r\n');
+  const url = URL.createObjectURL(new Blob(['\ufeff', csv], {type: 'text/csv;charset=utf-8'}));
+  const enlace = document.createElement('a');
+  enlace.href = url;
+  enlace.download = 'resultados_prediccion_lote.csv';
+  enlace.click();
+  URL.revokeObjectURL(url);
+}
+
+// Persistencia: los datos se guardan en el navegador y se restauran al actualizar la página
+const CLAVE = 'practica-prediccion-v1';
+let ultimosResultados = null;
+
+function guardar() {
+  try {
+    localStorage.setItem(CLAVE, JSON.stringify({
+      asistencias: asistencias.map(c => c.checked),
+      actividades: actividades.map(a => ({entrego: a.sel.value, nota: a.nota.value})),
+      historial, ultimosResultados
+    }));
+  } catch (e) { /* almacenamiento no disponible */ }
+}
+
+function restaurar() {
+  let d;
+  try { d = JSON.parse(localStorage.getItem(CLAVE)); } catch (e) { return; }
+  if (!d) return;
+  (d.asistencias || []).forEach((v, i) => { if (asistencias[i]) asistencias[i].checked = !!v; });
+  (d.actividades || []).forEach((v, i) => {
+    const a = actividades[i];
+    if (!a) return;
+    a.sel.value = v.entrego === '1' ? '1' : '0';
+    a.nota.disabled = a.sel.value !== '1';
+    a.nota.required = !a.nota.disabled;
+    a.nota.value = a.nota.disabled ? '0.0' : v.nota;
+  });
+  historial.push(...(d.historial || []));
+  ultimosResultados = d.ultimosResultados || null;
+  if (ultimosResultados) mostrarResultados(ultimosResultados);
+  if (historial.length) dibujarGrafico();
+  recalcular();
+}
+restaurar();
+</script>
+{% endif %}
+</body>
+</html>
